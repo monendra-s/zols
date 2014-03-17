@@ -6,15 +6,20 @@ package org.zols.web.config.controller;
 
 import com.mangofactory.swagger.annotations.ApiIgnore;
 import com.zols.datastore.DataStore;
+import com.zols.datastore.domain.BaseObject;
 import com.zols.datastore.domain.Entity;
 import com.zols.datastore.domain.NameLabel;
+import com.zols.datastore.util.DynamicBeanGenerator;
 import com.zols.templatemanager.TemplateStorageManager;
 import com.zols.templatemanager.domain.Template;
 import com.zols.templatemanager.domain.TemplateStorage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +31,9 @@ public class CoreController {
 
     @Autowired
     private DataStore dataStore;
+
+    @Autowired
+    private DynamicBeanGenerator dynamicBeanGenerator;
 
     @Autowired
     private TemplateStorageManager templateStorageManager;
@@ -51,6 +59,11 @@ public class CoreController {
             entity.setName("Double");
             entity.setLabel("Double");
             masterList.add(0, entity);
+            
+            entity = new Entity();
+            entity.setName("Time");
+            entity.setLabel("Time");
+            masterList.add(0, entity);
 
             entity = new Entity();
             entity.setName("Date");
@@ -60,6 +73,11 @@ public class CoreController {
             entity = new Entity();
             entity.setName("RichText");
             entity.setLabel("Rich Text");
+            masterList.add(0, entity);
+            
+            entity = new Entity();
+            entity.setName("Boolean");
+            entity.setLabel("Boolean");
             masterList.add(0, entity);
 
             entity = new Entity();
@@ -95,7 +113,18 @@ public class CoreController {
             nameLabel.setLabel("FTP");
             masterList.add(nameLabel);
 
+        } else {
+            Class<? extends BaseObject> clazz = dynamicBeanGenerator.getBeanClass(name);
+            masterList = dataStore.list(clazz);
         }
         return masterList;
+    }
+
+    @RequestMapping(value = "/master/all/{name}", method = GET)
+    @ResponseBody
+    public Map<String, List> masterAll(@PathVariable(value = "name") String name) throws IOException {
+        Map<String, List> map = new HashMap<String, List>(1);
+        map.put(name, master(name));
+        return map;
     }
 }
